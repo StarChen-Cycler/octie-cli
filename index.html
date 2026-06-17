@@ -698,6 +698,123 @@
   .status-blocked     .status-label { color: var(--accent-rose); }
 
   /* ═══════════════════════════════════════════
+     STATE BROADCAST
+  ═══════════════════════════════════════════ */
+  .broadcast-section {
+    background: var(--bg-deep);
+    border-top: 1px solid var(--border-ghost);
+    border-bottom: 1px solid var(--border-ghost);
+    padding: 100px 32px;
+  }
+
+  .broadcast-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 48px;
+  }
+
+  .broadcast-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-dim);
+    border-radius: var(--radius);
+    padding: 40px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .broadcast-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+  }
+
+  .broadcast-card.auto::before {
+    background: linear-gradient(90deg, transparent, var(--accent-steel), transparent);
+  }
+
+  .broadcast-card.manual::before {
+    background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+  }
+
+  .broadcast-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 24px;
+  }
+
+  .broadcast-card h3 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    letter-spacing: -0.3px;
+  }
+
+  .broadcast-card p {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+    font-weight: 300;
+    margin-bottom: 24px;
+  }
+
+  .broadcast-flow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .broadcast-flow .state {
+    padding: 6px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-ghost);
+    border-radius: var(--radius-xs);
+    color: var(--text-primary);
+  }
+
+  .broadcast-flow .arrow {
+    color: var(--text-muted);
+  }
+
+  .broadcast-flow .state.active {
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+  }
+
+  .broadcast-flow .state.auto {
+    border-color: var(--accent-steel);
+    color: var(--accent-steel);
+  }
+
+  .broadcast-cmd {
+    margin-top: 20px;
+    padding: 12px 16px;
+    background: var(--bg-deep);
+    border: 1px solid var(--border-ghost);
+    border-radius: var(--radius-xs);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent-sage);
+  }
+
+  .broadcast-cmd .comment {
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  /* ═══════════════════════════════════════════
      SKILLS
   ═══════════════════════════════════════════ */
   .skills-section {
@@ -1248,6 +1365,7 @@
   @media (max-width: 900px) {
     .features-grid { grid-template-columns: repeat(2, 1fr); }
     .skills-grid { grid-template-columns: repeat(2, 1fr); }
+    .broadcast-grid { grid-template-columns: 1fr; }
     .nav-links { display: none; }
   }
 
@@ -1520,6 +1638,59 @@
             <span>0/4</span>
           </div>
           <div class="handle handle-bottom"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ STATE BROADCAST ═══════════════ -->
+<section class="broadcast-section">
+  <div class="container">
+    <p class="section-label">State-Oriented Design</p>
+    <h2 class="section-title">Auto-broadcast. Manual approve.</h2>
+    <p class="section-desc" style="margin-left: auto; margin-right: auto;">
+      Two complementary mechanisms keep the task graph in sync: automatic state broadcast through the graph, and a single human approval gate.
+    </p>
+
+    <div class="broadcast-grid">
+
+      <div class="broadcast-card auto">
+        <div class="broadcast-icon">📡</div>
+        <h3>Auto State Broadcast</h3>
+        <p>Status is never set manually. It derives from item completion and blockers, then propagates through the graph via BFS. When a parent completes, children unblock automatically.</p>
+        <div class="broadcast-flow">
+          <span class="state auto">ready</span>
+          <span class="arrow">→</span>
+          <span class="state auto">in_progress</span>
+          <span class="arrow">→</span>
+          <span class="state active">in_review</span>
+          <span class="arrow">→</span>
+          <span class="state">completed</span>
+        </div>
+        <div class="broadcast-cmd">
+          <span class="comment"># Status auto-derives when criteria are met</span><br>
+          octie update &lt;id&gt; --complete-criterion &lt;id&gt;
+        </div>
+      </div>
+
+      <div class="broadcast-card manual">
+        <div class="broadcast-icon">✋</div>
+        <h3>Manual Approval Gate</h3>
+        <p>The only manual transition: <code>in_review → completed</code>. This is the human gate — the one moment where intent meets execution. Approval unblocks all dependent tasks.</p>
+        <div class="broadcast-flow">
+          <span class="state">ready</span>
+          <span class="arrow">→</span>
+          <span class="state">in_progress</span>
+          <span class="arrow">→</span>
+          <span class="state active">in_review</span>
+          <span class="arrow">→</span>
+          <span class="state auto">completed</span>
+        </div>
+        <div class="broadcast-cmd">
+          <span class="comment"># Only manual transition — the human gate</span><br>
+          octie approve &lt;id&gt;
         </div>
       </div>
 

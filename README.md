@@ -72,6 +72,38 @@ Status is derived, not set. Five states compute from item completion and blocker
 
 ---
 
+## Auto State Broadcast & Manual Approval
+
+Two complementary mechanisms keep the task graph in sync:
+
+### Auto State Broadcast
+
+Status is never set manually. It derives from item completion and blockers, then propagates through the graph via BFS. When a parent completes, children unblock automatically.
+
+```
+ready → in_progress → in_review → completed
+  ↑         ↑            ↑           ↑
+auto      auto         auto       manual
+```
+
+```bash
+# Status auto-derives when criteria are met
+octie update <id> --complete-criterion <id>
+```
+
+### Manual Approval Gate
+
+The only manual transition: `in_review → completed`. This is the human gate — the one moment where intent meets execution. Approval unblocks all dependent tasks.
+
+```bash
+# Only manual transition — the human gate
+octie approve <id>
+```
+
+**Key insight**: Agents can work autonomously through `ready → in_progress → in_review`, but only a human can approve the final transition to `completed`. This ensures quality control while maximizing agent autonomy.
+
+---
+
 ## CLI Commands
 
 | Command | Purpose |
