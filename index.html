@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Octie — Graph-Based Task Management for AI Agents</title>
+<meta name="description" content="CLI-first task graph kernel for AI agent workflows. Directed acyclic graph with auto-derived status, atomic task validation, and unmatched graph operations.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Outfit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ═══════════════════════════════════════════
+     PALETTE: Obsidian & Warm Gold
+     Deep charcoal base · warm gold accents · ivory text
+  ═══════════════════════════════════════════ */
+  :root {
+    /* Surfaces — warm charcoal, not pure black */
+    --bg-void:      #08080a;
+    --bg-deep:      #0c0c10;
+    --bg-surface:   #111116;
+    --bg-card:      #16161c;
+    --bg-elevated:  #1c1c24;
+
+    /* Borders — warm-tinted, not grey */
+    --border-ghost:   rgba(200,180,140,0.04);
+    --border-dim:     rgba(200,180,140,0.08);
+    --border-subtle:  rgba(200,180,140,0.14);
+
+    /* Text — warm ivory, not cold grey */
+    --text-primary:   #e8e4dc;
+    --text-secondary: #9a958c;
+    --text-muted:     #5c5850;
+
+    /* Accents — warm gold family */
+    --accent-gold:       #c9a84c;
+    --accent-gold-light: #e0c068;
+    --accent-gold-dim:   rgba(201,168,76,0.12);
+    --accent-gold-glow:  rgba(201,168,76,0.08);
+
+    /* Accent — warm copper (secondary) */
+    --accent-copper:      #c07848;
+    --accent-copper-dim:  rgba(192,120,72,0.12);
+
+    /* Accent — warm rose (tertiary / warning) */
+    --accent-rose:  #b87070;
+
+    /* Accent — muted sage (success) */
+    --accent-sage:     #7a9a6a;
+    --accent-sage-dim: rgba(122,154,106,0.12);
+
+    /* Accent — cool steel (info) */
+    --accent-steel: #6889a8;
+
+    /* Typography */
+    --font-display: 'Outfit', sans-serif;
+    --font-mono:    'Space Mono', monospace;
+
+    /* Radii */
+    --radius:    12px;
+    --radius-sm: 8px;
+    --radius-xs: 4px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-display);
+    background: var(--bg-void);
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* Subtle noise overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ═══════════════════════════════════════════
+     NAV
+  ═══════════════════════════════════════════ */
+  .nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 0 40px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(8,8,10,0.85);
+    backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--border-ghost);
+  }
+
+  .nav-brand {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent-gold);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: color 0.3s;
+  }
+
+  .nav-links a:hover { color: var(--text-primary); }
+
+  /* ═══════════════════════════════════════════
+     HERO
+  ═══════════════════════════════════════════ */
+  .hero {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 120px 32px 80px;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  /* Warm gold radial glow */
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 900px;
+    height: 500px;
+    background: radial-gradient(ellipse, var(--accent-gold-glow) 0%, transparent 60%);
+    pointer-events: none;
+    opacity: 0.8;
+  }
+
+  /* Subtle grid */
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(200,180,140,0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,180,140,0.018) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: radial-gradient(ellipse 55% 45% at 50% 40%, black, transparent);
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 20px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-dim);
+    border-radius: 100px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent-gold);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 48px;
+    position: relative;
+    z-index: 1;
+    animation: fadeUp 0.8s ease-out;
+  }
+
+  .hero-badge .pulse {
+    width: 8px;
+    height: 8px;
+    background: var(--accent-sage);
+    border-radius: 50%;
+    position: relative;
+  }
+
+  .hero-badge .pulse::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 1px solid var(--accent-sage);
+    animation: ping 2.5s ease-out infinite;
+  }
+
+  @keyframes ping {
+    0% { transform: scale(1); opacity: 0.5; }
+    100% { transform: scale(2.8); opacity: 0; }
+  }
+
+  .hero-title {
+    font-size: clamp(52px, 9vw, 108px);
+    font-weight: 800;
+    letter-spacing: -4px;
+    line-height: 0.85;
+    margin-bottom: 28px;
+    position: relative;
+    z-index: 1;
+    animation: fadeUp 0.8s ease-out 0.1s both;
+  }
+
+  .hero-title .octie-text {
+    background: linear-gradient(
+      135deg,
+      var(--text-primary) 0%,
+      var(--accent-gold-light) 40%,
+      var(--accent-gold) 60%,
+      var(--accent-copper) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    background-size: 200% 200%;
+    animation: gradientShift 10s ease infinite;
+  }
+
+  @keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  .hero-subtitle {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 48px;
+    position: relative;
+    z-index: 1;
+    animation: fadeUp 0.8s ease-out 0.2s both;
+  }
+
+  .hero-desc {
+    font-size: 20px;
+    font-weight: 300;
+    color: var(--text-secondary);
+    max-width: 540px;
+    margin-bottom: 56px;
+    line-height: 1.8;
+    position: relative;
+    z-index: 1;
+    animation: fadeUp 0.8s ease-out 0.3s both;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+    animation: fadeUp 0.8s ease-out 0.4s both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ═══════════════════════════════════════════
+     BUTTONS
+  ═══════════════════════════════════════════ */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    border: none;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-primary {
+    background: var(--accent-gold);
+    color: var(--bg-void);
+    box-shadow: 0 0 0 0 var(--accent-gold-dim);
+  }
+
+  .btn-primary:hover {
+    background: var(--accent-gold-light);
+    box-shadow: 0 0 40px 8px var(--accent-gold-dim);
+    transform: translateY(-2px);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--text-muted);
+    background: rgba(200,180,140,0.03);
+  }
+
+  /* ═══════════════════════════════════════════
+     SECTIONS — SHARED
+  ═══════════════════════════════════════════ */
+  section { padding: 120px 32px; position: relative; }
+  .container { max-width: 1000px; margin: 0 auto; }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent-gold);
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 700;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+    line-height: 1.1;
+  }
+
+  .section-desc {
+    font-size: 18px;
+    color: var(--text-secondary);
+    font-weight: 300;
+    max-width: 520px;
+    margin-bottom: 56px;
+    line-height: 1.8;
+  }
+
+  /* ═══════════════════════════════════════════
+     INSTALL TERMINAL
+  ═══════════════════════════════════════════ */
+  .install-section {
+    background: var(--bg-deep);
+    border-top: 1px solid var(--border-ghost);
+    border-bottom: 1px solid var(--border-ghost);
+  }
+
+  .terminal {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-dim);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px rgba(200,180,140,0.02),
+      0 24px 80px -24px rgba(0,0,0,0.6);
+  }
+
+  .terminal-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 20px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-ghost);
+  }
+
+  .terminal-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid rgba(200,180,140,0.06);
+  }
+
+  .terminal-dot:nth-child(1) { background: #c07060; }
+  .terminal-dot:nth-child(2) { background: #c9a84c; }
+  .terminal-dot:nth-child(3) { background: #7a9a6a; }
+
+  .terminal-title {
+    flex: 1;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 1.5px;
+  }
+
+  .terminal-body { padding: 28px; }
+
+  .install-step {
+    margin-bottom: 28px;
+    animation: fadeUp 0.6s ease-out both;
+  }
+
+  .install-step:nth-child(1) { animation-delay: 0.1s; }
+  .install-step:nth-child(2) { animation-delay: 0.2s; }
+  .install-step:nth-child(3) { animation-delay: 0.3s; }
+  .install-step:nth-child(4) { animation-delay: 0.4s; }
+  .install-step:last-child { margin-bottom: 0; }
+
+  .step-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+
+  .code-block {
+    background: var(--bg-deep);
+    border: 1px solid var(--border-ghost);
+    border-radius: var(--radius-sm);
+    padding: 18px 20px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.9;
+    color: var(--text-primary);
+    overflow-x: auto;
+  }
+
+  .code-block .prompt { color: var(--text-muted); user-select: none; }
+  .code-block .cmd     { color: var(--accent-steel); }
+  .code-block .flag    { color: var(--accent-copper); }
+  .code-block .str     { color: var(--accent-sage); }
+  .code-block .cmt     { color: var(--text-muted); font-style: italic; }
+  .code-block .op      { color: var(--text-muted); }
+
+  /* ═══════════════════════════════════════════
+     FEATURES GRID
+  ═══════════════════════════════════════════ */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border-ghost);
+    border: 1px solid var(--border-ghost);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .feature-card {
+    background: var(--bg-surface);
+    padding: 40px 32px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+
+  .feature-card:hover::before { opacity: 0.6; }
+  .feature-card:hover { background: var(--bg-card); }
+
+  .feature-idx {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent-gold);
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+  }
+
+  .feature-card h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    letter-spacing: -0.3px;
+  }
+
+  .feature-card p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  /* ═══════════════════════════════════════════
+     TASK STATES
+  ═══════════════════════════════════════════ */
+  .states-section {
+    background: var(--bg-deep);
+    border-top: 1px solid var(--border-ghost);
+    border-bottom: 1px solid var(--border-ghost);
+    padding: 100px 32px;
+    overflow: hidden;
+  }
+
+  .states-header {
+    text-align: center;
+    margin-bottom: 64px;
+  }
+
+  .panels-container {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    justify-content: center;
+    perspective: 1200px;
+    perspective-origin: 50% 50%;
+    flex-wrap: wrap;
+  }
+
+  /* 3D wrapper per panel */
+  .panel-3d {
+    width: 220px;
+    transform-style: preserve-3d;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .panel-3d:nth-child(1) { transform: rotateY(6deg)  rotateX(3deg); }
+  .panel-3d:nth-child(2) { transform: rotateY(3deg)  rotateX(2deg); }
+  .panel-3d:nth-child(3) { transform: rotateY(0deg)  rotateX(0deg); }
+  .panel-3d:nth-child(4) { transform: rotateY(-3deg) rotateX(2deg); }
+  .panel-3d:nth-child(5) { transform: rotateY(-6deg) rotateX(3deg); }
+
+  .panel-3d:hover {
+    transform: rotateY(0deg) rotateX(-5deg) translateZ(30px) !important;
+  }
+
+  /* Task panel card */
+  .task-panel {
+    background: var(--bg-card);
+    border: 2px solid;
+    border-radius: 8px;
+    padding: 10px 16px;
+    position: relative;
+    transform-style: preserve-3d;
+  }
+
+  .task-panel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+    z-index: -1;
+    transform: translateZ(-4px) translateY(4px);
+    opacity: 0.25;
+    pointer-events: none;
+  }
+
+  /* Status colors — warm palette */
+  .task-panel.ready       { border-color: var(--accent-gold); }
+  .task-panel.in_progress { border-color: var(--accent-steel); }
+  .task-panel.in_review   { border-color: var(--accent-purple); }
+  .task-panel.completed   { border-color: var(--accent-sage); }
+  .task-panel.blocked     { border-color: var(--accent-rose); }
+
+  .task-panel.ready::after       { background: var(--accent-gold); }
+  .task-panel.in_progress::after { background: var(--accent-steel); }
+  .task-panel.in_review::after   { background: var(--accent-purple); }
+  .task-panel.completed::after   { background: var(--accent-sage); }
+  .task-panel.blocked::after     { background: var(--accent-rose); }
+
+  /* Pulse glow per status */
+  @keyframes pulse-ready {
+    0%, 100% { box-shadow: 0 0 5px  rgba(201,168,76,0.2); }
+    50%      { box-shadow: 0 0 20px rgba(201,168,76,0.4), 0 0 40px rgba(201,168,76,0.15); }
+  }
+  @keyframes pulse-in-progress {
+    0%, 100% { box-shadow: 0 0 5px  rgba(104,137,168,0.2); }
+    50%      { box-shadow: 0 0 20px rgba(104,137,168,0.4), 0 0 40px rgba(104,137,168,0.15); }
+  }
+  @keyframes pulse-in-review {
+    0%, 100% { box-shadow: 0 0 5px  rgba(179,157,219,0.2); }
+    50%      { box-shadow: 0 0 20px rgba(179,157,219,0.4), 0 0 40px rgba(179,157,219,0.15); }
+  }
+  @keyframes pulse-completed {
+    0%, 100% { box-shadow: 0 0 5px  rgba(122,154,106,0.2); }
+    50%      { box-shadow: 0 0 20px rgba(122,154,106,0.4), 0 0 40px rgba(122,154,106,0.15); }
+  }
+  @keyframes pulse-blocked {
+    0%, 100% { box-shadow: 0 0 5px  rgba(184,112,112,0.2); }
+    50%      { box-shadow: 0 0 20px rgba(184,112,112,0.4), 0 0 40px rgba(184,112,112,0.15); }
+  }
+
+  .task-panel.ready       { animation: pulse-ready       3s ease-in-out infinite; }
+  .task-panel.in_progress { animation: pulse-in-progress 3s ease-in-out infinite; }
+  .task-panel.in_review   { animation: pulse-in-review   3s ease-in-out infinite; }
+  .task-panel.completed   { animation: pulse-completed   3s ease-in-out infinite; }
+  .task-panel.blocked     { animation: pulse-blocked     3s ease-in-out infinite; }
+
+  .task-panel:hover {
+    animation: none !important;
+  }
+  .task-panel.ready:hover       { box-shadow: 0 0 15px rgba(201,168,76,0.5), 0 0 35px rgba(201,168,76,0.2); }
+  .task-panel.in_progress:hover { box-shadow: 0 0 15px rgba(104,137,168,0.5), 0 0 35px rgba(104,137,168,0.2); }
+  .task-panel.in_review:hover   { box-shadow: 0 0 15px rgba(179,157,219,0.5), 0 0 35px rgba(179,157,219,0.2); }
+  .task-panel.completed:hover   { box-shadow: 0 0 15px rgba(122,154,106,0.5), 0 0 35px rgba(122,154,106,0.2); }
+  .task-panel.blocked:hover     { box-shadow: 0 0 15px rgba(184,112,112,0.5), 0 0 35px rgba(184,112,112,0.2); }
+
+  /* Handle dots */
+  .handle {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent-gold);
+    border: 2px solid var(--bg-card);
+    box-shadow: 0 0 6px rgba(201,168,76,0.5);
+  }
+  .handle-top    { top:    -5px; }
+  .handle-bottom { bottom: -5px; }
+
+  /* Panel internal layout */
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  .panel-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+  }
+
+  .panel-badge {
+    margin-left: 8px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    color: var(--bg-void);
+  }
+  .panel-badge.top    { background: var(--accent-rose); }
+  .panel-badge.second { background: var(--accent-gold); }
+  .panel-badge.later  { background: var(--bg-elevated); color: var(--text-muted); }
+
+  .panel-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 8px;
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  .panel-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+
+  .panel-footer .status-label {
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-size: 10px;
+  }
+
+  .status-ready       .status-label { color: var(--accent-gold); }
+  .status-in_progress .status-label { color: var(--accent-steel); }
+  .status-in_review   .status-label { color: var(--accent-purple); }
+  .status-completed   .status-label { color: var(--accent-sage); }
+  .status-blocked     .status-label { color: var(--accent-rose); }
+
+  /* ═══════════════════════════════════════════
+     WORKFLOW
+  ═══════════════════════════════════════════ */
+  .workflow-section {
+    background: var(--bg-deep);
+    border-top: 1px solid var(--border-ghost);
+    border-bottom: 1px solid var(--border-ghost);
+  }
+
+  .workflow-steps { display: flex; flex-direction: column; }
+
+  .workflow-step {
+    display: flex;
+    gap: 32px;
+    padding: 40px 0;
+    border-bottom: 1px solid var(--border-ghost);
+    align-items: flex-start;
+  }
+
+  .workflow-step:last-child { border-bottom: none; }
+
+  .step-num {
+    font-family: var(--font-mono);
+    font-size: 52px;
+    font-weight: 700;
+    color: var(--bg-elevated);
+    line-height: 1;
+    min-width: 60px;
+    transition: color 0.4s;
+  }
+
+  .workflow-step:hover .step-num { color: var(--accent-gold); }
+
+  .step-body h3 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+
+  .step-body p {
+    font-size: 15px;
+    color: var(--text-secondary);
+    font-weight: 300;
+    margin-bottom: 16px;
+    line-height: 1.8;
+  }
+
+  .step-cmd {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--accent-sage);
+    background: var(--bg-deep);
+    border: 1px solid var(--border-ghost);
+    padding: 10px 16px;
+    border-radius: var(--radius-xs);
+  }
+
+  /* ═══════════════════════════════════════════
+     GRAPH VISUALIZATION
+  ═══════════════════════════════════════════ */
+  .graph-section { text-align: center; }
+
+  .graph-canvas {
+    max-width: 640px;
+    margin: 48px auto 0;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-dim);
+    border-radius: var(--radius);
+    padding: 48px 40px;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .graph-canvas::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 30%, var(--accent-gold-glow) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, var(--accent-sage-dim) 0%, transparent 50%);
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .graph-line {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 2.2;
+    position: relative;
+    z-index: 1;
+  }
+
+  .g-node    { color: var(--accent-gold); }
+  .g-edge    { color: var(--text-muted); }
+  .g-ready   { color: var(--accent-sage); }
+  .g-blocked { color: var(--accent-copper); }
+  .g-progress{ color: var(--accent-steel); }
+  .g-cmd     { color: var(--text-muted); }
+
+  /* ═══════════════════════════════════════════
+     STATS
+  ═══════════════════════════════════════════ */
+  .stats-section {
+    background: var(--bg-deep);
+    border-top: 1px solid var(--border-ghost);
+    border-bottom: 1px solid var(--border-ghost);
+    padding: 80px 32px;
+  }
+
+  .stats-row {
+    display: flex;
+    justify-content: center;
+    gap: 80px;
+    flex-wrap: wrap;
+  }
+
+  .stat { text-align: center; }
+
+  .stat-val {
+    font-family: var(--font-mono);
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--accent-gold);
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+
+  .stat-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  /* ═══════════════════════════════════════════
+     AGENT CODE EXAMPLE
+  ═══════════════════════════════════════════ */
+  .agent-section {
+    background: var(--bg-deep);
+    border-top: 1px solid var(--border-ghost);
+    border-bottom: 1px solid var(--border-ghost);
+  }
+
+  .code-example { max-width: 680px; }
+
+  .code-example .code-block {
+    font-size: 13px;
+    line-height: 2;
+  }
+
+  /* ═══════════════════════════════════════════
+     CTA
+  ═══════════════════════════════════════════ */
+  .cta-section {
+    text-align: center;
+    padding: 140px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    bottom: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 700px;
+    height: 400px;
+    background: radial-gradient(ellipse, var(--accent-gold-glow) 0%, transparent 60%);
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
+  .cta-section h2 {
+    font-size: clamp(32px, 5vw, 48px);
+    font-weight: 700;
+    letter-spacing: -1.5px;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cta-section p {
+    font-size: 18px;
+    color: var(--text-secondary);
+    font-weight: 300;
+    margin-bottom: 40px;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+    z-index: 1;
+    line-height: 1.8;
+  }
+
+  .cta-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ═══════════════════════════════════════════
+     CONTACT
+  ═══════════════════════════════════════════ */
+  .contact-section {
+    background: var(--bg-deep);
+    border-top: 1px solid var(--border-ghost);
+    border-bottom: 1px solid var(--border-ghost);
+    padding: 100px 32px;
+    text-align: center;
+  }
+
+  .contact-card {
+    max-width: 520px;
+    margin: 0 auto;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-dim);
+    border-radius: var(--radius);
+    padding: 48px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .contact-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+    opacity: 0.4;
+  }
+
+  .contact-card::after {
+    content: '';
+    position: absolute;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 200px;
+    background: radial-gradient(ellipse, var(--accent-gold-glow) 0%, transparent 70%);
+    pointer-events: none;
+    opacity: 0.4;
+  }
+
+  .contact-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .contact-icon svg {
+    width: 24px;
+    height: 24px;
+    stroke: var(--accent-gold);
+    fill: none;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .contact-card h3 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .contact-card .contact-sub {
+    font-size: 16px;
+    color: var(--text-secondary);
+    font-weight: 300;
+    margin-bottom: 32px;
+    line-height: 1.7;
+    position: relative;
+    z-index: 1;
+  }
+
+  .contact-email {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    background: var(--bg-deep);
+    border: 1px solid var(--border-dim);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 15px;
+    color: var(--accent-gold);
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 1;
+  }
+
+  .contact-email:hover {
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 30px 4px var(--accent-gold-dim);
+    color: var(--accent-gold-light);
+  }
+
+  .contact-email svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--text-muted);
+    fill: none;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+
+  .contact-links {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .contact-link {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 8px 16px;
+    border: 1px solid var(--border-ghost);
+    border-radius: var(--radius-xs);
+    transition: all 0.2s;
+  }
+
+  .contact-link:hover {
+    color: var(--text-primary);
+    border-color: var(--border-subtle);
+    background: rgba(200,180,140,0.02);
+  }
+
+  /* ═══════════════════════════════════════════
+     FOOTER
+  ═══════════════════════════════════════════ */
+  .footer {
+    padding: 40px 32px;
+    text-align: center;
+    border-top: 1px solid var(--border-ghost);
+  }
+
+  .footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    list-style: none;
+  }
+
+  .footer-links a {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 8px 16px;
+    border-radius: var(--radius-xs);
+    transition: all 0.2s;
+  }
+
+  .footer-links a:hover {
+    color: var(--text-primary);
+    background: rgba(200,180,140,0.03);
+  }
+
+  .footer-links .sep {
+    color: var(--border-dim);
+    padding: 8px 4px;
+    font-size: 11px;
+  }
+
+  /* ═══════════════════════════════════════════
+     RESPONSIVE
+  ═══════════════════════════════════════════ */
+  @media (max-width: 900px) {
+    .features-grid { grid-template-columns: repeat(2, 1fr); }
+    .nav-links { display: none; }
+  }
+
+  @media (max-width: 640px) {
+    .features-grid { grid-template-columns: 1fr; }
+    .hero-title { letter-spacing: -2px; }
+    .stats-row { gap: 40px; }
+    .workflow-step { flex-direction: column; gap: 16px; }
+    .step-num { font-size: 32px; }
+    section { padding: 80px 20px; }
+    .nav { padding: 0 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ NAV ═══════════════ -->
+<nav class="nav">
+  <span class="nav-brand">octie</span>
+  <ul class="nav-links">
+    <li><a href="#install">Install</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#workflow">Workflow</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- ═══════════════ HERO ═══════════════ -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="pulse"></span>
+    <span>v2.0 — Task Graph Kernel</span>
+  </div>
+
+  <h1 class="hero-title">
+    <span class="octie-text">octie</span>
+  </h1>
+
+  <p class="hero-subtitle">State-oriented task graph kernel for the agentic era</p>
+
+  <p class="hero-desc">
+    Loop engineering substrate. Context engineering infrastructure.
+    State is derived, not set. The task layer that every agent framework can call.
+  </p>
+
+  <div class="hero-actions">
+    <button class="btn btn-primary" id="copy-install" onclick="copyInstallCmd()">
+      <span>$</span> npm install -g octie-cli
+    </button>
+    <a href="https://github.com/StarChen-Cycler/octie-cli" class="btn btn-ghost" target="_blank">
+      View on GitHub →
+    </a>
+  </div>
+
+  <script>
+    function copyInstallCmd() {
+      navigator.clipboard.writeText('npm install -g octie-cli').then(() => {
+        const btn = document.getElementById('copy-install');
+        const original = btn.innerHTML;
+        btn.innerHTML = '<span>✓</span> Copied to clipboard';
+        btn.style.background = 'var(--accent-sage)';
+        setTimeout(() => {
+          btn.innerHTML = original;
+          btn.style.background = '';
+        }, 2000);
+      });
+    }
+  </script>
+</section>
+
+<!-- ═══════════════ INSTALL ═══════════════ -->
+<section class="install-section" id="install">
+  <div class="container">
+    <p class="section-label">Installation</p>
+    <h2 class="section-title">Up and running in seconds</h2>
+    <p class="section-desc">
+      No cloud. No database. No external services. Just a local CLI that runs anywhere Node.js runs.
+    </p>
+
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span>
+        <span class="terminal-dot"></span>
+        <span class="terminal-dot"></span>
+        <span class="terminal-title">Terminal</span>
+      </div>
+      <div class="terminal-body">
+        <div class="install-step">
+          <p class="step-label">1 — Install</p>
+          <div class="code-block">
+            <span class="prompt">$ </span><span class="cmd">npm install</span> <span class="flag">-g</span> octie-cli
+          </div>
+        </div>
+        <div class="install-step">
+          <p class="step-label">2 — Initialize</p>
+          <div class="code-block">
+            <span class="prompt">$ </span><span class="cmd">mkdir</span> my-project <span class="op">&&</span> <span class="cmd">cd</span> my-project<br>
+            <span class="prompt">$ </span><span class="cmd">octie</span> init
+          </div>
+        </div>
+        <div class="install-step">
+          <p class="step-label">3 — Create a task</p>
+          <div class="code-block">
+            <span class="prompt">$ </span><span class="cmd">octie</span> create \<br>
+            &nbsp;&nbsp;<span class="flag">--title</span> <span class="str">"Implement login endpoint"</span> \<br>
+            &nbsp;&nbsp;<span class="flag">--description</span> <span class="str">"POST /auth/login with JWT"</span> \<br>
+            &nbsp;&nbsp;<span class="flag">--success-criterion</span> <span class="str">"Returns 200 with valid JWT"</span> \<br>
+            &nbsp;&nbsp;<span class="flag">--deliverable</span> <span class="str">"src/auth/login.ts"</span> \<br>
+            &nbsp;&nbsp;<span class="flag">--priority</span> top
+          </div>
+        </div>
+        <div class="install-step">
+          <p class="step-label">4 — Visualize</p>
+          <div class="code-block">
+            <span class="prompt">$ </span><span class="cmd">octie</span> list <span class="flag">--graph</span><br>
+            <span class="prompt">$ </span><span class="cmd">octie</span> serve
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ FEATURES ═══════════════ -->
+<section id="features">
+  <div class="container">
+    <p class="section-label">Capabilities</p>
+    <h2 class="section-title">State-oriented. Agent-native.</h2>
+    <p class="section-desc">
+      Not another todo list. Octie is the task substrate that bridges human intent and agent execution — where state is derived, not set.
+    </p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <p class="feature-idx">01</p>
+        <h3>Loop Engineering Substrate</h3>
+        <p>Design the system that prompts your agents — not the prompts themselves. Octie provides discovery, verification, memory, and guardrails for agent loops.</p>
+      </div>
+      <div class="feature-card">
+        <p class="feature-idx">02</p>
+        <h3>Context Engineering Infrastructure</h3>
+        <p>Structured, typed, dependency-aware context for agents. Not just text — tasks, criteria, deliverables, blockers. The context that lives between steps.</p>
+      </div>
+      <div class="feature-card">
+        <p class="feature-idx">03</p>
+        <h3>Agent-Native Task Layer</h3>
+        <p>CLI-first, file-based, local-first. Designed for Claude Code, Codex, Gemini CLI — any agent that lives in a terminal. No cloud dependency.</p>
+      </div>
+      <div class="feature-card">
+        <p class="feature-idx">04</p>
+        <h3>State-Oriented Architecture</h3>
+        <p>Status is derived, not set. Five states compute from item completion and blockers. State-oriented programming — the system recalculates itself, agents cannot drift out of sync.</p>
+      </div>
+      <div class="feature-card">
+        <p class="feature-idx">05</p>
+        <h3>Agentic Development Lifecycle</h3>
+        <p>Tasks, criteria, deliverables, approval gates, audit trails. The full ADLC — from planning to implementation to review — tracked in a single graph.</p>
+      </div>
+      <div class="feature-card">
+        <p class="feature-idx">06</p>
+        <h3>Dual Output for Agents & Humans</h3>
+        <p>Markdown for AI consumption. JSON for visualization. The same task graph serves both agent loops and human Kanban boards.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ TASK STATES ═══════════════ -->
+<section class="states-section">
+  <div class="container">
+    <div class="states-header">
+      <p class="section-label">State-Oriented</p>
+      <h2 class="section-title">Five derived states</h2>
+      <p class="section-desc" style="margin-left: auto; margin-right: auto;">
+        Status is never set manually. It derives from item completion, blockers, and approval gates. The system recalculates itself.
+      </p>
+    </div>
+
+    <div class="panels-container">
+
+      <!-- ready -->
+      <div class="panel-3d">
+        <div class="task-panel ready">
+          <div class="handle handle-top"></div>
+          <div class="panel-header">
+            <h3 class="panel-title">Set up auth middleware</h3>
+            <span class="panel-badge top">top</span>
+          </div>
+          <p class="panel-desc">Add JWT auth middleware to protect API routes, verify tokens on each request.</p>
+          <div class="panel-footer status-ready">
+            <span class="status-label">ready</span>
+            <span>0/4</span>
+          </div>
+          <div class="handle handle-bottom"></div>
+        </div>
+      </div>
+
+      <!-- in_progress -->
+      <div class="panel-3d">
+        <div class="task-panel in_progress">
+          <div class="handle handle-top"></div>
+          <div class="panel-header">
+            <h3 class="panel-title">Build registration endpoint</h3>
+            <span class="panel-badge top">top</span>
+          </div>
+          <p class="panel-desc">Create POST /register with input validation, password hashing, and email verification.</p>
+          <div class="panel-footer status-in_progress">
+            <span class="status-label">in progress</span>
+            <span>1/3</span>
+          </div>
+          <div class="handle handle-bottom"></div>
+        </div>
+      </div>
+
+      <!-- in_review -->
+      <div class="panel-3d">
+        <div class="task-panel in_review">
+          <div class="handle handle-top"></div>
+          <div class="panel-header">
+            <h3 class="panel-title">Database migration scripts</h3>
+            <span class="panel-badge second">second</span>
+          </div>
+          <p class="panel-desc">Write migration scripts for new user profile fields. Include rollback scripts.</p>
+          <div class="panel-footer status-in_review">
+            <span class="status-label">in review</span>
+            <span>3/3</span>
+          </div>
+          <div class="handle handle-bottom"></div>
+        </div>
+      </div>
+
+      <!-- completed -->
+      <div class="panel-3d">
+        <div class="task-panel completed">
+          <div class="handle handle-top"></div>
+          <div class="panel-header">
+            <h3 class="panel-title">Add health check endpoint</h3>
+            <span class="panel-badge later">later</span>
+          </div>
+          <p class="panel-desc">Simple GET /health returning service status, DB connectivity, and uptime.</p>
+          <div class="panel-footer status-completed">
+            <span class="status-label">completed</span>
+            <span>2/2</span>
+          </div>
+          <div class="handle handle-bottom"></div>
+        </div>
+      </div>
+
+      <!-- blocked -->
+      <div class="panel-3d">
+        <div class="task-panel blocked">
+          <div class="handle handle-top"></div>
+          <div class="panel-header">
+            <h3 class="panel-title">Deploy CI/CD pipeline</h3>
+            <span class="panel-badge top">top</span>
+          </div>
+          <p class="panel-desc">Set up GitHub Actions for automated testing and deployment. Blocked pending IAM role.</p>
+          <div class="panel-footer status-blocked">
+            <span class="status-label">blocked</span>
+            <span>0/4</span>
+          </div>
+          <div class="handle handle-bottom"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ WORKFLOW ═══════════════ -->
+<section class="workflow-section" id="workflow">
+  <div class="container">
+    <p class="section-label">Workflow</p>
+    <h2 class="section-title">Plan · Execute · Approve · Loop</h2>
+    <p class="section-desc">
+      The agentic loop. Tasks are discovered, executed, verified, and approved — then the next task is ready. The loop drives itself.
+    </p>
+
+    <div class="workflow-steps">
+      <div class="workflow-step">
+        <span class="step-num">01</span>
+        <div class="step-body">
+          <h3>Plan — Define the Work</h3>
+          <p>Break complex goals into atomic tasks with quantitative success criteria and concrete deliverables. Octie validates they're specific, measurable, and executable.</p>
+          <span class="step-cmd">octie create --title "..." --success-criterion "..." --deliverable "..."</span>
+        </div>
+      </div>
+      <div class="workflow-step">
+        <span class="step-num">02</span>
+        <div class="step-body">
+          <h3>Execute — Let Agents Work</h3>
+          <p>Agents discover ready tasks, implement changes, and mark criteria complete. Status auto-derives from item completion. No manual status updates — the system knows.</p>
+          <span class="step-cmd">octie list --status ready --format md</span>
+        </div>
+      </div>
+      <div class="workflow-step">
+        <span class="step-num">03</span>
+        <div class="step-body">
+          <h3>Approve — Gate the Quality</h3>
+          <p>When all items are complete, approve the task. This is the human gate — the one moment where intent meets execution. Approval unblocks the next work.</p>
+          <span class="step-cmd">octie approve &lt;id&gt;</span>
+        </div>
+      </div>
+      <div class="workflow-step">
+        <span class="step-num">04</span>
+        <div class="step-body">
+          <h3>Loop — The Cycle Continues</h3>
+          <p>Approved tasks unblock dependents. New tasks become ready. The agent loop discovers them, executes, and the cycle repeats — until the project is done.</p>
+          <span class="step-cmd">octie list --graph</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ GRAPH ═══════════════ -->
+<section class="graph-section">
+  <div class="container">
+    <p class="section-label">Task Graph</p>
+    <h2 class="section-title">Dependencies made visible</h2>
+    <p class="section-desc">
+      Tasks form a directed acyclic graph. Status propagates through dependencies. When a parent completes, children unblock automatically.
+    </p>
+
+    <div class="graph-canvas">
+      <div class="graph-line"><span class="g-node">┌─ Implement JWT login</span> <span class="g-ready">[ready]</span></div>
+      <div class="graph-line"><span class="g-edge">│</span></div>
+      <div class="graph-line"><span class="g-edge">├──→</span> <span class="g-node">┌─ Add password hashing</span> <span class="g-progress">[in_progress]</span></div>
+      <div class="graph-line"><span class="g-edge">│&nbsp;&nbsp;&nbsp;&nbsp;│</span></div>
+      <div class="graph-line"><span class="g-edge">│&nbsp;&nbsp;&nbsp;&nbsp;└──→</span> <span class="g-node">┌─ Password reset flow</span> <span class="g-blocked">[blocked]</span></div>
+      <div class="graph-line"><span class="g-edge">│</span></div>
+      <div class="graph-line"><span class="g-edge">└──→</span> <span class="g-node">┌─ Write auth tests</span> <span class="g-ready">[ready]</span></div>
+      <div class="graph-line" style="margin-top: 16px;"><span class="g-cmd">octie list --graph</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ STATS ═══════════════ -->
+<section class="stats-section">
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-val">O(1)</div>
+      <div class="stat-label">Graph lookups</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">6</div>
+      <div class="stat-label">Graph operations</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">5</div>
+      <div class="stat-label">Auto-derived states</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">16+</div>
+      <div class="stat-label">CLI commands</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ AGENT CODE ═══════════════ -->
+<section class="agent-section">
+  <div class="container">
+    <p class="section-label">For AI Agents</p>
+    <h2 class="section-title">The loop drives itself</h2>
+    <p class="section-desc">
+      Agents discover ready work, execute, and mark progress. Status derives automatically. The loop continues until the project is done.
+    </p>
+
+    <div class="code-example">
+      <div class="code-block">
+        <span class="cmt"># Get ready tasks — markdown for AI consumption</span><br>
+        <span class="prompt">$ </span><span class="cmd">octie</span> list <span class="flag">--status</span> ready <span class="flag">--format</span> md<br>
+        <br>
+        <span class="cmt"># Get task details before implementing</span><br>
+        <span class="prompt">$ </span><span class="cmd">octie</span> get &lt;task-id&gt; <span class="flag">--format</span> md<br>
+        <br>
+        <span class="cmt"># Mark progress — status auto-derives</span><br>
+        <span class="prompt">$ </span><span class="cmd">octie</span> update &lt;id&gt; <span class="flag">--complete-criterion</span> &lt;criterion-id&gt;<br>
+        <span class="prompt">$ </span><span class="cmd">octie</span> update &lt;id&gt; <span class="flag">--complete-deliverable</span> &lt;deliverable-id&gt;<br>
+        <br>
+        <span class="cmt"># Status: ready → in_progress → in_review (automatic)</span><br>
+        <span class="cmt"># Approve to unblock dependents</span><br>
+        <span class="prompt">$ </span><span class="cmd">octie</span> approve &lt;id&gt;
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ CTA ═══════════════ -->
+<section class="cta-section">
+  <h2>State-oriented task graph kernel</h2>
+  <p>
+    Loop engineering substrate. Context engineering infrastructure.<br>
+    State is derived, not set. Local-first. CLI-native. Agent-ready.
+  </p>
+  <div class="cta-actions">
+    <a href="#install" class="btn btn-primary">
+      Get Started ↓
+    </a>
+    <a href="#contact" class="btn btn-ghost">
+      Contact
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════ CONTACT ═══════════════ -->
+<section class="contact-section" id="contact">
+  <div class="contact-card">
+    <div class="contact-icon">
+      <svg viewBox="0 0 24 24">
+        <rect x="2" y="4" width="20" height="16" rx="2"/>
+        <path d="M22 4L12 13L2 4"/>
+      </svg>
+    </div>
+    <h3>Get in Touch</h3>
+    <p class="contact-sub">
+      Questions, feedback, or collaboration ideas?<br>
+      I'd love to hear from you.
+    </p>
+    <a href="mailto:zhangyc0307@gmail.com" class="contact-email">
+      <svg viewBox="0 0 24 24">
+        <rect x="2" y="4" width="20" height="16" rx="2"/>
+        <path d="M22 4L12 13L2 4"/>
+      </svg>
+      zhangyc0307@gmail.com
+    </a>
+    <div class="contact-links">
+      <a href="mailto:zhangyc0307@gmail.com" class="contact-link">Email</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<footer class="footer">
+  <ul class="footer-links">
+    <li><a href="mailto:zhangyc0307@gmail.com">Contact</a></li>
+    <li class="sep">·</li>
+    <li><span style="color: var(--text-muted); font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px;">MIT License</span></li>
+  </ul>
+</footer>
+
+</body>
+</html>
