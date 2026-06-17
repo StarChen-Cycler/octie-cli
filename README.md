@@ -158,7 +158,6 @@ Status is **never set manually** — it derives from item completion and blocker
 
 ## Links
 
-- **npm**: [octie-cli](https://www.npmjs.com/package/octie-cli)
 - **Website**: [GitHub Pages](https://starchen-cycler.github.io/octie-cli/)
 
 ---
