@@ -70,6 +70,12 @@ Status is derived, not set. Five states compute from item completion and blocker
 
 ---
 
+## Harness Architecture
+
+![Octie Harness Architecture](octie-harness.jpg)
+
+---
+
 ## CLI Commands
 
 | Command | Purpose |

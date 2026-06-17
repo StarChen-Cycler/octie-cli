@@ -859,6 +859,23 @@
   }
 
   /* ═══════════════════════════════════════════
+     HARNESS DIAGRAM
+  ═══════════════════════════════════════════ */
+  .harness-section {
+    text-align: center;
+    padding: 80px 32px;
+  }
+
+  .harness-image {
+    max-width: 720px;
+    width: 100%;
+    margin: 40px auto 0;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-dim);
+    box-shadow: 0 20px 60px -20px rgba(0,0,0,0.5);
+  }
+
+  /* ═══════════════════════════════════════════
      GRAPH VISUALIZATION
   ═══════════════════════════════════════════ */
   .graph-section { text-align: center; }
@@ -1589,6 +1606,18 @@
         </div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- ═══════════════ HARNESS DIAGRAM ═══════════════ -->
+<section class="harness-section">
+  <div class="container">
+    <p class="section-label">Architecture</p>
+    <h2 class="section-title">The harness loop</h2>
+    <p class="section-desc" style="margin-left: auto; margin-right: auto;">
+      Octie implements the complete agent harness — trigger, discover, execute, verify, approve, remember, and loop.
+    </p>
+    <img src="octie-harness.jpg" alt="Octie Harness Architecture" class="harness-image">
   </div>
 </section>
 
