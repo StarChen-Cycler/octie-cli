@@ -169,17 +169,6 @@
     pointer-events: none;
   }
 
-  .hero-image {
-    width: 280px;
-    height: auto;
-    border-radius: var(--radius);
-    margin-bottom: 32px;
-    position: relative;
-    z-index: 1;
-    animation: fadeUp 0.8s ease-out;
-    box-shadow: 0 20px 60px -20px rgba(0,0,0,0.5);
-  }
-
   .hero-badge {
     display: inline-flex;
     align-items: center;
@@ -1207,6 +1196,53 @@
   }
 
   /* ═══════════════════════════════════════════
+     SHOWCASE
+  ═══════════════════════════════════════════ */
+  .showcase-section {
+    padding: 0 32px 80px;
+    position: relative;
+  }
+
+  .showcase-frame {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border-dim);
+    box-shadow:
+      0 0 0 1px rgba(200,180,140,0.03),
+      0 30px 80px -20px rgba(0,0,0,0.6),
+      0 0 60px -20px var(--accent-gold-glow);
+  }
+
+  .showcase-frame::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+    opacity: 0.5;
+    z-index: 1;
+  }
+
+  .showcase-frame::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+    opacity: 0.3;
+    z-index: 1;
+  }
+
+  .showcase-image {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* ═══════════════════════════════════════════
      RESPONSIVE
   ═══════════════════════════════════════════ */
   @media (max-width: 900px) {
@@ -1247,8 +1283,6 @@
     <span>v2.0 — Task Graph Kernel</span>
   </div>
 
-  <img src="octie-harness.jpg" alt="Octie - Harness Your Agents" class="hero-image">
-
   <h1 class="hero-title">
     <span class="octie-text">octie</span>
   </h1>
@@ -1283,6 +1317,15 @@
       });
     }
   </script>
+</section>
+
+<!-- ═══════════════ SHOWCASE ═══════════════ -->
+<section class="showcase-section">
+  <div class="container">
+    <div class="showcase-frame">
+      <img src="octie-harness.jpg" alt="Octie - Harness Your Agents" class="showcase-image">
+    </div>
+  </div>
 </section>
 
 <!-- ═══════════════ INSTALL ═══════════════ -->
