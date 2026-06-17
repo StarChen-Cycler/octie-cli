@@ -62,7 +62,7 @@ Structured, typed, dependency-aware context for agents. Not just text — tasks,
 
 ### Agent-Native Task Layer
 
-CLI-first, file-based, local-first. Designed for Claude Code, Codex, Gemini CLI — any agent that lives in a terminal.
+CLI-first, file-based, local-first. Designed for any shell agent — Claude Code, Codex, Gemini CLI, or any terminal-based AI.
 
 ### State-Oriented Architecture
 
@@ -113,9 +113,9 @@ octie approve <id>
 
 ---
 
-## Claude Code Skills
+## Agent Skills
 
-This repository includes skills for Claude Code that provide structured workflows for working with Octie:
+This repository includes skills for any shell agent that provide structured workflows for working with Octie:
 
 | Skill | Purpose |
 |-------|---------|
@@ -128,14 +128,14 @@ This repository includes skills for Claude Code that provide structured workflow
 
 ### Installing Skills
 
-Copy the skills to your Claude Code skills directory:
+Copy the skills to your agent's skills directory:
 
 ```bash
-# Copy all skills
+# For Claude Code
 cp -r skills/* ~/.claude/skills/
 
-# Or copy individual skills
-cp -r skills/octie-plan ~/.claude/skills/
+# For other agents, copy to their respective skill directories
+# or use the skills directly from this repository
 ```
 
 ---
