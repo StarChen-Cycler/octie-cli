@@ -23,3 +23,6 @@ build/
 .env
 .env.local
 .env.*.local
+
+# Documentation
+docs/
