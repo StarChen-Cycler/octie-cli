@@ -1,5 +1,7 @@
 # Octie CLI
 
+![Octie - Harness Your Agents](octie-harness.jpg)
+
 **State-oriented task graph kernel for the agentic era.**
 
 Loop engineering substrate. Context engineering infrastructure. State is derived, not set. The task layer that every agent framework can call.
@@ -67,12 +69,6 @@ CLI-first, file-based, local-first. Designed for any shell agent — Claude Code
 ### State-Oriented Architecture
 
 Status is derived, not set. Five states compute from item completion and blockers. The system recalculates itself — agents cannot drift out of sync.
-
----
-
-## Harness Architecture
-
-![Octie Harness Architecture](octie-harness.jpg)
 
 ---
 
