@@ -739,19 +739,6 @@
     background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
   }
 
-  .broadcast-icon {
-    width: 48px;
-    height: 48px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-dim);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    margin-bottom: 24px;
-  }
-
   .broadcast-card h3 {
     font-size: 22px;
     font-weight: 600;
@@ -859,21 +846,6 @@
     display: flex;
     align-items: center;
     gap: 12px;
-  }
-
-  .skill-icon {
-    width: 36px;
-    height: 36px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-dim);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-mono);
-    font-size: 14px;
-    color: var(--accent-gold);
-    flex-shrink: 0;
   }
 
   .skill-name {
@@ -1657,7 +1629,6 @@
     <div class="broadcast-grid">
 
       <div class="broadcast-card auto">
-        <div class="broadcast-icon">📡</div>
         <h3>Auto State Broadcast</h3>
         <p>Status is never set manually. It derives from item completion and blockers, then propagates through the graph via BFS. When a parent completes, children unblock automatically.</p>
         <div class="broadcast-flow">
@@ -1676,7 +1647,6 @@
       </div>
 
       <div class="broadcast-card manual">
-        <div class="broadcast-icon">✋</div>
         <h3>Manual Approval Gate</h3>
         <p>The only manual transition: <code>in_review → completed</code>. This is the human gate — the one moment where intent meets execution. Approval unblocks all dependent tasks.</p>
         <div class="broadcast-flow">
@@ -1711,7 +1681,6 @@
 
       <div class="skill-card">
         <div class="skill-header">
-          <div class="skill-icon">⚡</div>
           <span class="skill-name">octie-install</span>
         </div>
         <h3>Setup & Onboarding</h3>
@@ -1721,7 +1690,6 @@
 
       <div class="skill-card">
         <div class="skill-header">
-          <div class="skill-icon">🔍</div>
           <span class="skill-name">octie-research</span>
         </div>
         <h3>Deep Investigation</h3>
@@ -1731,7 +1699,6 @@
 
       <div class="skill-card">
         <div class="skill-header">
-          <div class="skill-icon">📋</div>
           <span class="skill-name">octie-plan</span>
         </div>
         <h3>Task Creation</h3>
@@ -1741,7 +1708,6 @@
 
       <div class="skill-card">
         <div class="skill-header">
-          <div class="skill-icon">🚀</div>
           <span class="skill-name">octie-dev</span>
         </div>
         <h3>Development Loop</h3>
@@ -1751,7 +1717,6 @@
 
       <div class="skill-card">
         <div class="skill-header">
-          <div class="skill-icon">🔧</div>
           <span class="skill-name">octie-fix</span>
         </div>
         <h3>Bug Investigation</h3>
@@ -1761,7 +1726,6 @@
 
       <div class="skill-card">
         <div class="skill-header">
-          <div class="skill-icon">🔄</div>
           <span class="skill-name">octie-refine</span>
         </div>
         <h3>Graph Optimization</h3>
