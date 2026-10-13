@@ -44,7 +44,7 @@ ls -la .octie/ 2>/dev/null
 
 **If .octie/ doesn't exist**:
 ```bash
-octie init
+octie init --name <project-name>
 ```
 
 **If .octie/ exists**: Skip to Phase B.

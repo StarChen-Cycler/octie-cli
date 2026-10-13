@@ -1372,7 +1372,7 @@
 <section class="hero">
   <div class="hero-badge">
     <span class="pulse"></span>
-    <span>v2.0 — Task Graph Kernel</span>
+    <span>v1.3.2 — Task Graph Kernel</span>
   </div>
 
   <h1 class="hero-title">
@@ -1447,7 +1447,7 @@
           <p class="step-label">2 — Initialize</p>
           <div class="code-block">
             <span class="prompt">$ </span><span class="cmd">mkdir</span> my-project <span class="op">&&</span> <span class="cmd">cd</span> my-project<br>
-            <span class="prompt">$ </span><span class="cmd">octie</span> init
+            <span class="prompt">$ </span><span class="cmd">octie</span> init <span class="flag">--name</span> my-project
           </div>
         </div>
         <div class="install-step">
@@ -1466,6 +1466,13 @@
           <div class="code-block">
             <span class="prompt">$ </span><span class="cmd">octie</span> list <span class="flag">--graph</span><br>
             <span class="prompt">$ </span><span class="cmd">octie</span> serve
+          </div>
+        </div>
+        <div class="install-step">
+          <p class="step-label">5 — As a DSH plugin (optional)</p>
+          <div class="code-block">
+            <span class="cmt"># Inside DeepSeek Harness — 13 octie_* tools + sidebar panel + preset</span><br>
+            <span class="prompt">$ </span><span class="cmd">dsh</span> plugin <span class="flag">--profile</span> &lt;name&gt; <span class="cmd">add</span> octie-cli
           </div>
         </div>
       </div>
@@ -1512,6 +1519,11 @@
         <p class="feature-idx">06</p>
         <h3>Dual Output for Agents & Humans</h3>
         <p>Markdown for AI consumption. JSON for visualization. The same task graph serves both agent loops and human Kanban boards.</p>
+      </div>
+      <div class="feature-card">
+        <p class="feature-idx">07</p>
+        <h3>DeepSeek Harness Plugin</h3>
+        <p>Runs as a DSH bundle: 13 <code>octie_*</code> model tools registered inside the agent, a live sidebar task panel with DAG graph view, and a pre-provisioned agent preset — no wiring needed.</p>
       </div>
     </div>
   </div>
@@ -1815,16 +1827,16 @@
       <div class="stat-label">Graph lookups</div>
     </div>
     <div class="stat">
-      <div class="stat-val">6</div>
-      <div class="stat-label">Graph operations</div>
+      <div class="stat-val">19</div>
+      <div class="stat-label">CLI commands</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">13</div>
+      <div class="stat-label">DSH agent tools</div>
     </div>
     <div class="stat">
       <div class="stat-val">5</div>
       <div class="stat-label">Auto-derived states</div>
-    </div>
-    <div class="stat">
-      <div class="stat-val">16+</div>
-      <div class="stat-label">CLI commands</div>
     </div>
   </div>
 </section>

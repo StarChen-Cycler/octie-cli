@@ -105,13 +105,13 @@ octie --help
 - `octie graph` — Graph operations
 - `octie serve` — Start web UI
 
-### Step C2: Check Global Registry
+### Step C2: Check the Project Registry
 
 ```bash
-octie projects
+octie registry prune
 ```
 
-**Purpose**: Shows registered Octie projects. Should be empty on fresh install.
+**Purpose**: The global registry (`~/.octie/projects.json`) tracks every opened Octie project. `prune` removes entries whose paths no longer exist — on a fresh install it reports nothing to remove. The full project list is visible in the web UI (`octie serve`) and the DSH panel.
 
 ---
 
@@ -126,7 +126,7 @@ mkdir octie-demo && cd octie-demo
 ### Step D2: Initialize Octie Project
 
 ```bash
-octie init
+octie init --name octie-demo
 ```
 
 **Expected**: Creates `.octie/` directory with `project.json`.

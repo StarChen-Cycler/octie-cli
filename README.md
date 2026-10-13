@@ -23,7 +23,7 @@ npm install -g octie-cli
 ```bash
 # Initialize a project
 mkdir my-project && cd my-project
-octie init
+octie init --name my-project
 
 # Create a task
 octie create \
@@ -108,22 +108,41 @@ octie approve <id>
 
 | Command | Purpose |
 |---------|---------|
-| `octie init` | Initialize project |
+| `octie init --name <name>` | Initialize project (name required, must be unique) |
 | `octie create` | Create atomic task |
 | `octie list` | List tasks (with filters) |
-| `octie get` | Get task details |
-| `octie update` | Update task (criteria, deliverables, blockers) |
+| `octie get` | Get task details (`--fields` to narrow the payload) |
+| `octie update` | Update task (criteria, deliverables, blockers, need_fix) |
 | `octie approve` | Approve task (in_review → completed) |
 | `octie delete` | Delete task |
 | `octie merge` | Merge two tasks |
 | `octie wire` | Insert task in dependency chain |
-| `octie graph` | Graph operations (validate, cycles, topology) |
+| `octie graph` | Graph operations (validate, cycles, chain) |
+| `octie handoff` | Create loose subproject handoffs (child Octie projects) |
 | `octie export` | Export to MD/JSON |
 | `octie import` | Import from MD/JSON |
 | `octie history` | View/restore snapshots |
+| `octie panel` | Read-only overview of the project and its subprojects |
+| `octie registry` | Maintain the global project registry (`prune` stale entries) |
+| `octie config` | Get/set project-level configuration |
 | `octie serve` | Start web UI |
 | `octie find` | Search tasks (by status, priority, blockers) |
-| `octie batch` | Batch operations on multiple tasks |
+
+Run any command with `--help`, or print a built-in guide with a `--right-way-to-*` flag (e.g. `octie --right-way-to-form-tasks`; handoffs have their own: `octie handoff create --right-way-to-create-subtask-handoff`).
+
+---
+
+## DeepSeek Harness Plugin
+
+Octie also ships as a DSH bundle plugin — the same task graph, inside your DSH agent:
+
+```bash
+dsh plugin --profile <name> add octie-cli
+```
+
+- **13 `octie_*` model tools** (`octie_create`, `octie_update`, `octie_approve`, `octie_handoff`, …) registered directly in the model's tool surface
+- **Sidebar task panel** in the DSH web GUI with live list/DAG graph views
+- **Pre-provisioned agent preset** on plugin load, with a settings card for template updates
 
 ---
 
@@ -133,12 +152,16 @@ octie approve <id>
 # Get ready tasks (markdown format for AI)
 octie list --status ready --format md
 
-# Get task details
+# Get task details — narrow the payload to save context
 octie get <task-id> --format md
+octie get <task-id> --format json --fields status,title
 
 # Mark progress
 octie update <id> --complete-criterion <criterion-id>
 octie update <id> --complete-deliverable <deliverable-id>
+
+# Withdraw a need_fix item that no longer applies (never executed, never blocks)
+octie update <id> --withdraw-need-fix <need-fix-id>
 
 # Status auto-derives: ready → in_progress → in_review
 # Approve to unblock dependents
